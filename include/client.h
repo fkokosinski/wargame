@@ -2,8 +2,8 @@
 #define WARGAME_CLIENT_H
 
 #include "declarations.h"
-#include "tui.h"
 #include "msg.h"
+#include "tui.h"
 
 int client_main(void);
 

@@ -1,5 +1,10 @@
 #include "tui.h"
 
+void tui_init(void) {
+    initscr();
+    curs_set(0);
+}
+
 /* print game title */
 void print_title(void) {
     attron(A_BOLD);
@@ -8,13 +13,11 @@ void print_title(void) {
     refresh();
 }
 
-void change_size(int sig) {
+void tui_resize(int sig) {
     signal(SIGWINCH, SIG_IGN);
+
     endwin();
     initscr();
-    refresh();
-    clear();
 
-    print_title();
-    signal(SIGWINCH, change_size);
+    signal(SIGWINCH, tui_resize);
 }

@@ -3,7 +3,9 @@
 
 #include "declarations.h"
 
+void tui_initalize(void);
+
 void print_title(void);
-void change_size(int sig);
+void tui_resize(int sig);
 
 #endif

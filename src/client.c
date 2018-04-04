@@ -31,7 +31,7 @@ void *receiver(void *data) {
 
 int client_main(void) {
     /* signal handler (window resizing */
-    signal(SIGWINCH, change_size);
+    signal(SIGWINCH, tui_resize);
 
     /* connect to server */
     msg_connect(&player_info);
@@ -39,10 +39,9 @@ int client_main(void) {
     pthread_t cli_receiver;
     pthread_create(&cli_receiver, NULL, receiver, NULL);
 
-    initscr();
+    tui_initalize();
     WINDOW *win_playerinfo = newwin(10, 50, 1, 0);
     keypad(win_playerinfo, TRUE);
-    curs_set(0);
 
     print_title();
 
