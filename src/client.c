@@ -2,6 +2,7 @@
 
 struct player player_info;
 static pthread_mutex_t player_data = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t new_info;
 
 /* receive messages from server and process them accordingly */
 void *receiver(void *data) {
@@ -21,6 +22,7 @@ void *receiver(void *data) {
         pthread_mutex_unlock(&player_data);
 
         last_msg = time(NULL);
+        pthread_cond_signal(&new_info);
 
         pthread_mutex_lock(&player_data);
     }
@@ -30,6 +32,8 @@ void *receiver(void *data) {
 }
 
 int client_main(void) {
+    char str[80];
+
     /* signal handler (window resizing */
     signal(SIGWINCH, tui_resize);
 
@@ -39,10 +43,7 @@ int client_main(void) {
     pthread_t cli_receiver;
     pthread_create(&cli_receiver, NULL, receiver, NULL);
 
-    tui_initalize();
-    WINDOW *win_playerinfo = newwin(10, 50, 1, 0);
-    keypad(win_playerinfo, TRUE);
-
+    tui_ctl(TUI_INIT);
     print_title();
 
     pthread_mutex_lock(&player_data);
@@ -50,37 +51,19 @@ int client_main(void) {
         pthread_mutex_unlock(&player_data);
 
         pthread_mutex_lock(&player_data);
-
-        /* clear player info window */
-        wclear(win_playerinfo);
-
-        wattron(win_playerinfo, A_BOLD);    /* set bold */
-        if (player_info.wins != 1)          /* check what form to use (plural vs singular) */
-            wprintw(win_playerinfo, "Player %d:\t%d wins\n", player_info.player_id, player_info.wins);
-        else
-            wprintw(win_playerinfo, "Player %d:\t%d win\n", player_info.player_id, player_info.wins);
-        wattroff(win_playerinfo, A_BOLD);   /* unset bold */
-
-        /* print player's statistics */
-        wprintw(win_playerinfo, "Resources:\t%d\n", player_info.resources);
-        wprintw(win_playerinfo, "Workers:\t%d\n", player_info.workers);
-        wprintw(win_playerinfo, "Light inf.:\t%d\n", player_info.light_inf);
-        wprintw(win_playerinfo, "Heavy inf.:\t%d\n", player_info.heavy_inf);
-        wprintw(win_playerinfo, "Cavalry:\t%d\n", player_info.cavalry);
-
-        /* refresh window */
-        wrefresh(win_playerinfo);
-
+        pthread_cond_wait(&new_info, &player_data);
+        print_playerinfo(player_info);
         pthread_mutex_unlock(&player_data);
-        sleep(1);   /* don't refresh too quickly */
-        /* TODO: ^ odswiezanie odpiero jak dostanie info (signale z pthreadow) */
+
+        move(LINES - 1, 0);
+        getstr(str);
 
         pthread_mutex_lock(&player_data);
     }
     pthread_mutex_unlock(&player_data);
 
     pthread_join(cli_receiver, NULL);
-    endwin();
 
+    tui_ctl(TUI_EXIT);
     return 0;
 }

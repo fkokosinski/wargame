@@ -3,9 +3,14 @@
 
 #include "declarations.h"
 
-void tui_initalize(void);
+#define TUI_INIT 0
+#define TUI_EXIT 1
+
+
+void tui_ctl(int opt);
+void tui_resize(int sig);
 
 void print_title(void);
-void tui_resize(int sig);
+void print_playerinfo(struct player _last_info);
 
 #endif
