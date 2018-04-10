@@ -49,4 +49,16 @@ struct player {
 #define PING_INTERVAL 1
 #define PRODUCE_INTERVAL 1
 
+/* recruit time */
+#define WORKER_RECRUIT_TIME 1
+#define LINFANTRY_RECRUIT_TIME 2
+#define HINFANTRY_RECRUIT_TIME 3
+#define CAVALRY_RECRUIT_TIME 4
+
+/* costs */
+#define WORKER_COST 100
+#define LINFANTRY_COST 200
+#define HINFANTRY_COST 300
+#define CAVALRY_COST 400
+
 #endif //WARGAME_DECLARATIONS_H

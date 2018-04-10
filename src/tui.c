@@ -9,7 +9,7 @@ void tui_ctl(int opt) {
         initscr();
         curs_set(0);
 
-        _win_playerinfo = newwin(LINES-2, COLS/2, 2, 0);
+        _win_playerinfo = newwin(LINES-6, COLS/2, 2, 0);
     } else if (opt == 1) {
         endwin();
     }

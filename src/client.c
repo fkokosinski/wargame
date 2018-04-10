@@ -31,20 +31,7 @@ void *receiver(void *data) {
     return NULL;
 }
 
-int client_main(void) {
-    char str[80];
-
-    /* signal handler (window resizing */
-    signal(SIGWINCH, tui_resize);
-
-    /* connect to server */
-    msg_connect(&player_info);
-
-    pthread_t cli_receiver;
-    pthread_create(&cli_receiver, NULL, receiver, NULL);
-
-    tui_ctl(TUI_INIT);
-    print_title();
+void *print_info(void *data) {
 
     pthread_mutex_lock(&player_data);
     while (player_info.active) {
@@ -55,8 +42,44 @@ int client_main(void) {
         print_playerinfo(player_info);
         pthread_mutex_unlock(&player_data);
 
-        move(LINES - 1, 0);
-        getstr(str);
+        pthread_mutex_lock(&player_data);
+    }
+
+    return NULL;
+}
+
+int client_main(void) {
+    char str[INPUT_LEN];
+
+    /* signal handler (window resizing */
+    signal(SIGWINCH, tui_resize);
+
+    /* connect to server */
+    msg_connect(&player_info);
+
+    pthread_t cli_receiver, tui_info;
+    pthread_create(&cli_receiver, NULL, receiver, NULL);
+
+    tui_ctl(TUI_INIT);
+    pthread_create(&tui_info, NULL, print_info, NULL);
+    print_title();
+
+    pthread_mutex_lock(&player_data);
+    while (player_info.active) {
+        pthread_mutex_unlock(&player_data);
+
+        /* get command */
+        mvgetnstr(LINES-1, 0, str, INPUT_LEN);
+        pthread_mutex_lock(&player_data);
+        wclear(stdscr);
+        print_title();
+        print_playerinfo(player_info);
+        pthread_mutex_unlock(&player_data);
+
+        /* process accordingly */
+        if (str[0] == 'r') {    /* recruit units */
+            msg_request(player_info.player_id, atoi(&str[2]), atoi(&str[4]));
+        }
 
         pthread_mutex_lock(&player_data);
     }

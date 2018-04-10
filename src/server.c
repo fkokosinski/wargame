@@ -61,6 +61,74 @@ void *pinger(void *data) {
     return NULL;
 }
 
+void *recruiter(void *data) {
+    int player_id = *(int*)data;
+    struct recruit_req request;
+
+    pthread_mutex_lock(&player_data);
+    pid_t pid = player_arr[player_id].pid;
+    pthread_mutex_unlock(&player_data);
+
+    pthread_mutex_lock(&player_data);
+    while (player_arr[player_id].active) {
+        pthread_mutex_unlock(&player_data);
+
+        /* wait for request */
+        request = msg_recruit(player_id);
+
+        /* check if enough resources */
+        pthread_mutex_lock(&player_data);
+        if (request.unit == 0 && request.quantity*WORKER_COST > player_arr[player_id].resources)
+            continue;
+        else if (request.unit == 1 && request.quantity*LINFANTRY_COST > player_arr[player_id].resources)
+            continue;
+        else if (request.unit == 2 && request.quantity*HINFANTRY_COST > player_arr[player_id].resources)
+            continue;
+        else if (request.unit == 3 && request.quantity*CAVALRY_COST > player_arr[player_id].resources)
+            continue;
+        pthread_mutex_unlock(&player_data);
+
+        /* check if enough resources */
+        pthread_mutex_lock(&player_data);
+        if (request.unit == 0)
+            player_arr[player_id].resources -= WORKER_COST*request.quantity;
+        else if (request.unit == 1)
+            player_arr[player_id].resources -= LINFANTRY_COST*request.quantity;
+        else if (request.unit == 2)
+            player_arr[player_id].resources -= HINFANTRY_COST*request.quantity;
+        else if (request.unit == 3)
+            player_arr[player_id].resources -= CAVALRY_COST*request.quantity;
+        pthread_mutex_unlock(&player_data);
+
+        /* recruit */
+        for (int i = 0; i < request.quantity; i++) {
+            if (request.unit == 0) {
+                sleep(WORKER_RECRUIT_TIME);
+                pthread_mutex_lock(&player_data);
+                player_arr[player_id].workers++;
+                pthread_mutex_unlock(&player_data);
+            } else if (request.unit == 1) {
+                sleep(LINFANTRY_RECRUIT_TIME);
+                pthread_mutex_lock(&player_data);
+                player_arr[player_id].light_inf++;
+                pthread_mutex_unlock(&player_data);
+            } else if (request.unit == 2) {
+                sleep(HINFANTRY_RECRUIT_TIME);
+                pthread_mutex_lock(&player_data);
+                player_arr[player_id].heavy_inf++;
+                pthread_mutex_unlock(&player_data);
+            } else if (request.unit == 3) {
+                sleep(CAVALRY_RECRUIT_TIME);
+                pthread_mutex_lock(&player_data);
+                player_arr[player_id].heavy_inf++;
+                pthread_mutex_unlock(&player_data);
+            }
+        }
+    }
+
+    return NULL;
+}
+
 int server_main(void) {
     msg_initialize();
 
@@ -85,11 +153,12 @@ int server_main(void) {
     for (int i = 0; i < PLAYER_NUM; i++)
         msg_notify(player_arr[i].pid);
 
-    pthread_t player_producer[3], player_pinger[3];
+    pthread_t player_producer[PLAYER_NUM], player_pinger[PLAYER_NUM], player_recruiter[PLAYER_NUM];
     for (int i = 0; i < PLAYER_NUM; i++) {
         pthread_mutex_lock(&player_data);
         pthread_create(&player_producer[i], NULL, resource_producer, &player_arr[i].player_id);
         pthread_create(&player_pinger[i], NULL, pinger, &player_arr[i].player_id);
+        pthread_create(&player_recruiter[i], NULL, recruiter, &player_arr[i].player_id);
         pthread_mutex_unlock(&player_data);
     }
 

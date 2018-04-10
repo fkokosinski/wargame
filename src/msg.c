@@ -89,6 +89,32 @@ bool msg_pong(struct player *player_data) {
     return true;
 }
 
+struct recruit_req msg_recruit(int player_id) {
+    struct msgcli message;
+    struct recruit_req request;
+
+    /* wait for request */
+    int err = (int)msgrcv(_msg_id, &message, BUF_SIZE(struct msgcli), MSG_TYPE_RECRUIT(player_id), 0);
+    CHECK_ERR(err);
+
+    request.unit = message.unit;
+    request.quantity = message.quantity;
+
+    return request;
+}
+
+void msg_request(int player_id, int unit, int quantity) {
+    struct msgcli message = {
+            .mtype = MSG_TYPE_RECRUIT(player_id),
+            .unit = unit,
+            .quantity = quantity
+    };
+
+    /* send request */
+    int err = msgsnd(_msg_id, &message, BUF_SIZE(struct msgcli), 0);
+    CHECK_ERR(err);
+}
+
 void msg_connect(struct player *player_data) {
     /* open message queue and check for errors */
     _msg_id = msgget(QUEUE_K, 0);
