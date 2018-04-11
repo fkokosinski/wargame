@@ -50,15 +50,27 @@ struct player {
 #define PRODUCE_INTERVAL 1
 
 /* recruit time */
-#define WORKER_RECRUIT_TIME 1
-#define LINFANTRY_RECRUIT_TIME 2
-#define HINFANTRY_RECRUIT_TIME 3
-#define CAVALRY_RECRUIT_TIME 4
+#define WORKER_RECRUIT_TIME 2
+#define LIGHT_INF_RECRUIT_TIME 2
+#define HEAVY_INF_RECRUIT_TIME 3
+#define CAVALRY_RECRUIT_TIME 5
 
 /* costs */
-#define WORKER_COST 100
-#define LINFANTRY_COST 200
-#define HINFANTRY_COST 300
-#define CAVALRY_COST 400
+#define WORKER_COST 150
+#define LIGHT_INF_COST 100
+#define HEAVY_INF_COST 250
+#define CAVALRY_COST 550
+
+/* attack stats */
+#define WORKER_ATK 0.0
+#define LIGHT_INF_ATK 1.0
+#define HEAVY_INF_ATK 1.5
+#define CAVALRY_ATK 3.5
+
+/* defense stats */
+#define WORKER_DEF 0.0
+#define LIGHT_INF_DEF 1.2
+#define HEAVY_INF_DEF 3.0
+#define CAVALRY_DEF 1.2
 
 #endif //WARGAME_DECLARATIONS_H

@@ -115,6 +115,27 @@ void msg_request(int player_id, int unit, int quantity) {
     CHECK_ERR(err);
 }
 
+void msg_attack(int source, int target, struct atk_party units) {
+    struct msgcli message = {
+            .mtype = MSG_TYPE_ATTACK(source),
+            .attack = units
+    };
+    message.attack.source = source;
+    message.attack.target = target;
+
+    int err = msgsnd(_msg_id, &message, BUF_SIZE(struct msgcli), 0);
+    CHECK_ERR(err);
+}
+
+struct atk_party msg_atk_fetch(int player_id) {
+    struct msgcli message;
+
+    int err = (int)msgrcv(_msg_id, &message, BUF_SIZE(struct msgcli), MSG_TYPE_ATTACK(player_id), 0);
+    CHECK_ERR(err);
+
+    return message.attack;
+}
+
 void msg_connect(struct player *player_data) {
     /* open message queue and check for errors */
     _msg_id = msgget(QUEUE_K, 0);

@@ -50,6 +50,7 @@ void *print_info(void *data) {
 
 int client_main(void) {
     char str[INPUT_LEN];
+    struct atk_party attack;
 
     /* signal handler (window resizing */
     signal(SIGWINCH, tui_resize);
@@ -79,6 +80,12 @@ int client_main(void) {
         /* process accordingly */
         if (str[0] == 'r') {    /* recruit units */
             msg_request(player_info.player_id, atoi(&str[2]), atoi(&str[4]));
+        } else if (str[0] == 'a') {
+            attack.light_inf = atoi(&str[4]);
+            attack.heavy_inf = atoi(&str[6]);
+            attack.cavalry = atoi(&str[8]);
+
+            msg_attack(player_info.player_id, atoi(&str[2]), attack);
         }
 
         pthread_mutex_lock(&player_data);
