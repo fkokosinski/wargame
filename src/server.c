@@ -64,7 +64,7 @@ void *pinger(void *data) {
 void *attacker(void *data) {
     int player_id = *(int*)data;
     struct atk_party attack;
-    float power;
+    float power_atk, power_def, ratio;
     int target;
 
     pthread_mutex_lock(&player_data);
@@ -89,12 +89,42 @@ void *attacker(void *data) {
 
         /* check who has more atk points */
         target = attack.target;
-        power = attack.light_inf + attack.heavy_inf + attack.cavalry;
-        power -= player_arr[target].light_inf + player_arr[target].heavy_inf + player_arr[target].cavalry;
+        power_atk = attack.light_inf + attack.heavy_inf + attack.cavalry;
+        power_def = player_arr[target].light_inf + player_arr[target].heavy_inf + player_arr[target].cavalry;
 
-        if (power > 0.0) {    /* attacker has won */
+        if (power_atk - power_def > 0.0) {    /* attacker has won */
             player_arr[player_id].wins++;
+
+            /* kill all defender's units */
+            player_arr[target].workers = 0;
+            player_arr[target].light_inf = 0;
+            player_arr[target].heavy_inf = 0;
+            player_arr[target].cavalry = 0;
+
+            /* kill some of attacker's units */
+            ratio = power_def / power_atk;
+            attack.light_inf -= attack.light_inf * ratio;
+            attack.heavy_inf -= attack.heavy_inf * ratio;
+            attack.cavalry -= attack.cavalry * ratio;
+        } else {
+            ratio = power_atk / power_def;
+
+            /* kill some of defender's units */
+            player_arr[target].workers -= player_arr[target].workers * ratio;
+            player_arr[target].light_inf -= player_arr[target].light_inf * ratio;
+            player_arr[target].heavy_inf -= player_arr[target].heavy_inf * ratio;
+            player_arr[target].cavalry -= player_arr[target].cavalry * ratio;
+
+            /* kill some of attacker's units */
+            attack.light_inf -= attack.light_inf * ratio;
+            attack.heavy_inf -= attack.heavy_inf * ratio;
+            attack.cavalry -= attack.cavalry * ratio;
         }
+
+        /* return units */
+        player_arr[player_id].light_inf += attack.light_inf;
+        player_arr[player_id].heavy_inf += attack.heavy_inf;
+        player_arr[player_id].cavalry += attack.cavalry;
 
         if (player_arr[player_id].wins == 3)
             for (int i = 0; i < PLAYER_NUM; i++)
